@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+  environment = { REACT_APP_API_URL = "https://your-backend-api.herokuapp.com" }
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
