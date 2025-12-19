@@ -1168,17 +1168,38 @@ api.add_resource(InterviewsAPI, '/api/interviews')
 api.add_resource(AuditLogAPI, '/api/audit-log')
 api.add_resource(CompanySearchAPI, '/api/search-companies')
 
-# Only create tables if not using Alembic (to avoid conflicts during migration)
-if not os.environ.get('ALEMBIC_RUNNING'):
+# Run database migrations or create tables
+# When using in production with Render, prefer Alembic migrations
+if os.environ.get('RUN_MIGRATIONS', '').lower() == 'true':
+    # Run migrations when RUN_MIGRATIONS is set to true
     with app.app_context():
-        # Create tables
-        db.create_all()
+        from alembic.config import Config
+        from alembic import command
+        import tempfile
+        import os
+
+        # Set up Alembic config
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")  # Run all pending migrations
+
         # Check if admin user exists, create if not
         if not User.query.filter_by(username='admin').first():
             admin = User(username='admin', email='admin@example.com')
             admin.set_password('password')
             db.session.add(admin)
             db.session.commit()
+else:
+    # For backward compatibility or when migrations are not needed
+    if not os.environ.get('ALEMBIC_RUNNING'):
+        with app.app_context():
+            # Create tables
+            db.create_all()
+            # Check if admin user exists, create if not
+            if not User.query.filter_by(username='admin').first():
+                admin = User(username='admin', email='admin@example.com')
+                admin.set_password('password')
+                db.session.add(admin)
+                db.session.commit()
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
