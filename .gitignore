@@ -50,3 +50,5 @@ Thumbs.db
 
 # Local configuration
 instance/
+# Local Netlify folder
+.netlify
